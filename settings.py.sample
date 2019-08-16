@@ -1,0 +1,12 @@
+CHARTS = [
+    {
+        'title': 'Chart title',
+        'url': 'https://chart.url',
+        'site': 'site',
+        'scroll': [0, 180],
+        'login': True,
+        'login_wait': 60,
+        'rotate_wait': 20,
+        'zoom': 1
+    }
+]
