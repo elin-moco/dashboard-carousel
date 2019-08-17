@@ -2,11 +2,10 @@ import time
 import settings
 from selenium.webdriver import ActionChains, Firefox
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
 from argparse import ArgumentParser
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
-from datetime import datetime,timedelta
+from datetime import datetime, timedelta
 
 
 def get_arg_parser():
@@ -52,7 +51,8 @@ def get_arg_parser():
 
 class DashboardCarousel:
 
-    def __init__(self, charts, wait_sec, fullscreen, reload_hour, login_time, load_wait):
+    def __init__(self, charts, wait_sec, fullscreen, reload_hour, login_time,
+                 load_wait):
         self.charts = [x for x in charts if 'disabled' not in x or not x['disabled']]
         self.browser = Firefox()
         if fullscreen:
@@ -91,7 +91,8 @@ class DashboardCarousel:
         if chart['site'] == 'adjust':
             current_date = datetime.today()
             prev_month = current_date - timedelta(days=30)
-            url = chart['url'].format(prev_month.strftime('%Y-%m-%d'), current_date.strftime('%Y-%m-%d'))
+            url = chart['url'].format(prev_month.strftime('%Y-%m-%d'),
+                                      current_date.strftime('%Y-%m-%d'))
         else:
             url = chart['url']
 
@@ -99,7 +100,9 @@ class DashboardCarousel:
 
         if login:
             # manual login
-            time.sleep(self.login_time if 'login_wait' not in chart else chart['login_wait'])
+            time.sleep(self.login_time
+                       if 'login_wait' not in chart
+                       else chart['login_wait'])
             self.browser.get(url)
 
         time.sleep(self.load_wait)
@@ -109,8 +112,10 @@ class DashboardCarousel:
         if chart['site'] == 'surveygizmo':
             self.browser.execute_script(
                 'var i= 0;var ids=[];'
-                'for (var row of document.getElementsByClassName("report-row")) {ids.push(row.id);};'
-                'setInterval(function(){if (i>=ids.length){i=0};window.location="#"+ids[i];i++;}, 4000)')
+                'for (var row of document.getElementsByClassName("report-row")) {'
+                'ids.push(row.id);};'
+                'setInterval(function(){'
+                'if (i>=ids.length){i=0};window.location="#"+ids[i];i++;}, 4000)')
 
         if chart['site'] == 'gplay-console':
             hamburger = self.wait.until(
@@ -122,37 +127,48 @@ class DashboardCarousel:
                 ec.visibility_of_element_located((By.CSS_SELECTOR, '.ry3kXd')))
             filter_select.click()
             filter_option = self.wait.until(
-                ec.visibility_of_element_located((By.CSS_SELECTOR, '.OA0qNb > :first-child')))
+                ec.visibility_of_element_located((By.CSS_SELECTOR,
+                                                  '.OA0qNb > :first-child')))
             filter_option.click()
 
             self.browser.execute_script(
                 'setInterval(function(){'
-                'if((window.scrollMaxY-window.scrollY)<300){window.scroll(0,0);};window.scrollByLines(1);}, 100);')
+                'if((window.scrollMaxY-window.scrollY)<300){'
+                'window.scroll(0,0);};window.scrollByLines(1);}, 100);')
 
         if chart['site'] == 'redash' and 'filter' in chart:
             country_select = self.wait.until(
-                ec.visibility_of_element_located((By.CSS_SELECTOR, '.filters-wrapper .ant-select-enabled')))
+                ec.visibility_of_element_located((By.CSS_SELECTOR,
+                                                  '.filters-wrapper '
+                                                  '.ant-select-enabled')))
             country_select.click()
             country_option = self.wait.until(
                 ec.visibility_of_element_located(
-                    (By.XPATH, '//li[contains(@class, "ant-select-dropdown-menu-item") and text() = "{}"]'
+                    (By.XPATH,
+                     '//li[contains(@class, "ant-select-dropdown-menu-item") '
+                     'and text() = "{}"]'
                      .format(chart['filter'][0]))))
             country_option.click()
 
         if 'scroll' in chart:
-            self.browser.execute_script('window.scroll({}, {});'.format(chart['scroll'][0], chart['scroll'][1]))
+            self.browser.execute_script(
+                'window.scroll({}, {});'.format(chart['scroll'][0], chart['scroll'][1]))
 
         # doesn't work in Firefox
         if 'zoom' in chart:
-            self.browser.execute_script('document.body.style.zoom="{};"'.format(chart['zoom']))
+            self.browser.execute_script(
+                'document.body.style.zoom="{};"'.format(chart['zoom']))
 
     def autorotate(self, secs):
         while True:
             for i, handle in enumerate(self.browser.window_handles):
                 self.browser.switch_to.window(handle)
-                time.sleep(secs if 'rotate_wait' not in self.charts[i] else self.charts[i]['rotate_wait'])
+                time.sleep(secs
+                           if 'rotate_wait' not in self.charts[i]
+                           else self.charts[i]['rotate_wait'])
             current_time = datetime.now()
-            if current_time.hour == self.reload_hour and (current_time - self.last_reload).seconds > (12 * 60 * 60):
+            if current_time.hour == self.reload_hour \
+                    and (current_time - self.last_reload).seconds > (12 * 60 * 60):
                 self.reload_charts()
 
     def shutdown(self):

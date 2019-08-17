@@ -1,0 +1,7 @@
+*.pyc
+*.swp
+*.swo
+venv/
+.idea/
+settings.py
+geckodriver.log
