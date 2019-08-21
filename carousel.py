@@ -11,10 +11,22 @@ from datetime import datetime, timedelta
 def get_arg_parser():
     parser = ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--fullscreen",
-        default=True,
+        "--nofullscreen",
+        default=False,
         action="store_true",
         help="The ETL task to run.",
+    )
+    parser.add_argument(
+        "--norotate",
+        default=False,
+        action="store_true",
+        help="Don't rotate between tabs.",
+    )
+    parser.add_argument(
+        "--testreload",
+        default=False,
+        action="store_true",
+        help="Test reload once.",
     )
     parser.add_argument(
         "--elem-wait",
@@ -51,11 +63,11 @@ def get_arg_parser():
 
 class DashboardCarousel:
 
-    def __init__(self, charts, wait_sec, fullscreen, reload_hour, login_time,
+    def __init__(self, charts, wait_sec, nofullscreen, reload_hour, login_time,
                  load_wait):
         self.charts = [x for x in charts if 'disabled' not in x or not x['disabled']]
         self.browser = Firefox()
-        if fullscreen:
+        if not nofullscreen:
             self.browser.fullscreen_window()
         self.actions = ActionChains(self.browser)
         self.wait = WebDriverWait(self.browser, wait_sec)
@@ -171,6 +183,14 @@ class DashboardCarousel:
                     and (current_time - self.last_reload).seconds > (12 * 60 * 60):
                 self.reload_charts()
 
+    def staystill(self, testreload=False):
+        tested = False
+        while True:
+            time.sleep(10)
+            if testreload and not tested:
+                self.reload_charts()
+                tested = True
+
     def shutdown(self):
         self.browser.quit()
 
@@ -179,11 +199,14 @@ def main():
     args = get_arg_parser().parse_args()
     carousel = DashboardCarousel(settings.CHARTS,
                                  wait_sec=args.elem_wait,
-                                 fullscreen=args.fullscreen,
+                                 nofullscreen=args.nofullscreen,
                                  reload_hour=args.reload_time,
                                  login_time=args.login_time,
                                  load_wait=args.load_wait)
-    carousel.autorotate(args.rotate_wait)
+    if args.norotate or args.testreload:
+        carousel.staystill(args.testreload)
+    else:
+        carousel.autorotate(args.rotate_wait)
     carousel.shutdown()
 
 
